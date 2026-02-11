@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "477752467975",
+    "project_id": "that-girl-tracker",
+    "storage_bucket": "that-girl-tracker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:477752467975:android:406201934585a56f8980a2",
+        "android_client_info": {
+          "package_name": "com.kikis.that_girl_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDU4VtFm48hLU5tbZJptvYvgZdx7ZTxI0Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
