@@ -5,6 +5,12 @@ import '../features/calendar/add_event_screen.dart';
 import '../features/calendar/calendar_screen.dart';
 import '../features/calendar/event_detail_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/outfit/add_clothing_screen.dart';
+import '../features/outfit/morning_outfit_screen.dart';
+import '../features/outfit/saved_outfits_screen.dart';
+import '../features/outfit/wardrobe_screen.dart';
+import '../features/outfit/wishlist_screen.dart';
+import '../models/clothing_item.dart';
 import '../models/event.dart';
 import '../shared/widgets/app_shell.dart';
 
@@ -20,7 +26,7 @@ class AppRouter {
         path: '/auth',
         builder: (context, state) => const AuthScreen(),
       ),
-      // Full-screen routes (outside shell / no bottom nav)
+      // Calendar full-screen routes
       GoRoute(
         path: '/calendar/add',
         parentNavigatorKey: _rootNavigatorKey,
@@ -42,6 +48,36 @@ class AppRouter {
           return EventDetailScreen(eventId: id);
         },
       ),
+      // Wardrobe full-screen routes
+      GoRoute(
+        path: '/wardrobe/add',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AddClothingScreen(),
+      ),
+      GoRoute(
+        path: '/wardrobe/edit/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final item = state.extra as ClothingItem?;
+          return AddClothingScreen(existingItem: item);
+        },
+      ),
+      GoRoute(
+        path: '/wardrobe/outfits',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SavedOutfitsScreen(),
+      ),
+      GoRoute(
+        path: '/wardrobe/wishlist',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const WishlistScreen(),
+      ),
+      GoRoute(
+        path: '/outfit/morning',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const MorningOutfitScreen(),
+      ),
+      // Shell routes (with bottom nav)
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => AppShell(child: child),
@@ -60,8 +96,8 @@ class AppRouter {
           ),
           GoRoute(
             path: '/wardrobe',
-            pageBuilder: (context, state) => NoTransitionPage(
-              child: _placeholder('Wardrobe'),
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: WardrobeScreen(),
             ),
           ),
           GoRoute(

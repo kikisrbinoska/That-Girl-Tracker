@@ -8,6 +8,7 @@ import '../../models/event.dart';
 import '../../services/event_providers.dart';
 import '../../shared/constants/app_colors.dart';
 import '../../shared/widgets/glass_card.dart';
+import '../../shared/widgets/weather_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -64,7 +65,15 @@ class HomeScreen extends ConsumerWidget {
                   .animate()
                   .fadeIn(duration: 500.ms, delay: 100.ms)
                   .slideX(begin: -0.1, end: 0),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+
+              // Weather card
+              const WeatherCard()
+                  .animate()
+                  .fadeIn(duration: 500.ms, delay: 150.ms)
+                  .slideY(begin: 0.1, end: 0),
+
+              const SizedBox(height: 20),
 
               // Today's date card
               GlassCard(
@@ -205,6 +214,7 @@ class HomeScreen extends ConsumerWidget {
                         colors: [AppColors.rosePink, Color(0xFFE88FA8)],
                       ),
                       isDark: isDark,
+                      onTap: () => context.push('/outfit/morning'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -386,45 +396,50 @@ class _QuickActionCard extends StatelessWidget {
   final String label;
   final LinearGradient gradient;
   final bool isDark;
+  final VoidCallback? onTap;
 
   const _QuickActionCard({
     required this.icon,
     required this.label,
     required this.gradient,
     required this.isDark,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: gradient,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: gradient.colors.first.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassCard(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: gradient,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: gradient.colors.first.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white : AppColors.textDark,
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white : AppColors.textDark,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
