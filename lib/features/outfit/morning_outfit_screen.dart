@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../models/clothing_item.dart';
 import '../../models/event.dart';
 import '../../services/event_providers.dart';
+import '../../services/fitness_providers.dart';
 import '../../services/outfit_service.dart';
 import '../../services/wardrobe_providers.dart';
 import '../../shared/constants/app_colors.dart';
@@ -14,12 +16,24 @@ import '../../shared/widgets/glass_card.dart';
 class MorningOutfitScreen extends ConsumerWidget {
   const MorningOutfitScreen({super.key});
 
+  bool _hasGymToday(List<Event> events) {
+    return events.any((e) => e.type == EventType.gym);
+  }
+
+  List<ClothingItem> _getGymOutfit(List<ClothingItem> wardrobe) {
+    return wardrobe
+        .where((item) => item.category == ClothingCategory.sport)
+        .take(3)
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final weatherAsync = ref.watch(weatherProvider);
     final todayEvents = ref.watch(todayEventsProvider);
     final wardrobeAsync = ref.watch(clothingItemsProvider);
+    final trainingPlanAsync = ref.watch(trainingPlanProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -163,7 +177,156 @@ class MorningOutfitScreen extends ConsumerWidget {
                     .fadeIn(duration: 500.ms, delay: 200.ms)
                     .slideY(begin: 0.1, end: 0),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+
+              // Gym outfit suggestion
+              wardrobeAsync.when(
+                data: (wardrobe) {
+                  final hasGym = _hasGymToday(todayEvents);
+                  final hasGymPlan = trainingPlanAsync.when(
+                    data: (plans) => plans.any(
+                        (p) => p.dayOfWeek == DateTime.now().weekday && !p.isRestDay),
+                    loading: () => false,
+                    error: (_, __) => false,
+                  );
+
+                  if (!hasGym && !hasGymPlan) {
+                    return const SizedBox.shrink();
+                  }
+
+                  final gymItems = _getGymOutfit(wardrobe);
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GlassCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                ShaderMask(
+                                  shaderCallback: (bounds) =>
+                                      AppColors.softGradient.createShader(bounds),
+                                  child: const Icon(
+                                      Icons.fitness_center_rounded,
+                                      color: Colors.white,
+                                      size: 22),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    "Gym Day! Here's your workout fit \u{1F4AA}",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.textDark,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (gymItems.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                height: 100,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: gymItems.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(width: 10),
+                                  itemBuilder: (_, i) {
+                                    final item = gymItems[i];
+                                    return GlassCard(
+                                      padding: EdgeInsets.zero,
+                                      child: SizedBox(
+                                        width: 80,
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    const BorderRadius.vertical(
+                                                        top: Radius.circular(
+                                                            20)),
+                                                child: item.imageUrl
+                                                        .isNotEmpty
+                                                    ? CachedNetworkImage(
+                                                        imageUrl:
+                                                            item.imageUrl,
+                                                        fit: BoxFit.cover,
+                                                        width: 80,
+                                                      )
+                                                    : Container(
+                                                        color: AppColors
+                                                            .rosePink
+                                                            .withValues(
+                                                                alpha: 0.08),
+                                                        child: const Center(
+                                                          child: Icon(
+                                                              Icons
+                                                                  .checkroom_rounded,
+                                                              size: 20,
+                                                              color: AppColors
+                                                                  .textMuted),
+                                                        ),
+                                                      ),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.all(4),
+                                              child: Text(
+                                                item.name,
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : AppColors.textDark,
+                                                ),
+                                                maxLines: 1,
+                                                overflow:
+                                                    TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ] else
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  'Add sport items to your wardrobe for gym outfit suggestions!',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w300,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : AppColors.textMuted,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(duration: 500.ms, delay: 250.ms)
+                          .slideY(begin: 0.1, end: 0),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
 
               // Outfit Recommendation
               weatherAsync.when(

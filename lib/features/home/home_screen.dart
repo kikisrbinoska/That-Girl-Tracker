@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,10 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../models/event.dart';
+import '../../models/step_data.dart';
 import '../../services/event_providers.dart';
+import '../../services/fitness_providers.dart';
 import '../../shared/constants/app_colors.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/weather_card.dart';
+import '../nutrition/water_tracker_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -26,6 +30,9 @@ class HomeScreen extends ConsumerWidget {
     final dateStr = DateFormat('EEEE, MMMM d').format(now);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final todayEvents = ref.watch(todayEventsProvider);
+    final todaySteps = ref.watch(todayStepsProvider);
+    final morningRoutine = ref.watch(morningRoutineProvider);
+    final eveningRoutine = ref.watch(eveningRoutineProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -54,7 +61,7 @@ class HomeScreen extends ConsumerWidget {
                 shaderCallback: (bounds) =>
                     AppColors.primaryGradient.createShader(bounds),
                 child: Text(
-                  'That Girl ✨',
+                  'That Girl \u{2728}',
                   style: GoogleFonts.poppins(
                     fontSize: 32,
                     fontWeight: FontWeight.w600,
@@ -75,32 +82,22 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
-              // Today's date card
-              GlassCard(
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.softGradient,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.rosePink.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.calendar_today_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
+              // Step progress ring (small) + Today's date
+              Row(
+                children: [
+                  // Mini step ring
+                  todaySteps.when(
+                    data: (steps) =>
+                        _MiniStepRing(steps: steps, isDark: isDark),
+                    loading: () => const SizedBox(width: 120, height: 120),
+                    error: (_, __) =>
+                        const SizedBox(width: 120, height: 120),
+                  ),
+                  const SizedBox(width: 16),
+                  // Date card
+                  Expanded(
+                    child: GlassCard(
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -117,7 +114,7 @@ class HomeScreen extends ConsumerWidget {
                           Text(
                             dateStr,
                             style: GoogleFonts.poppins(
-                              fontSize: 18,
+                              fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color:
                                   isDark ? Colors.white : AppColors.textDark,
@@ -126,11 +123,187 @@ class HomeScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               )
                   .animate()
                   .fadeIn(duration: 500.ms, delay: 200.ms)
+                  .slideY(begin: 0.1, end: 0),
+
+              const SizedBox(height: 20),
+
+              // Water tracker card (compact)
+              const WaterTrackerWidget(compact: true)
+                  .animate()
+                  .fadeIn(duration: 500.ms, delay: 250.ms)
+                  .slideY(begin: 0.1, end: 0),
+
+              const SizedBox(height: 20),
+
+              // Routine quick access cards
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => context.push('/routine/morning'),
+                      child: GlassCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFFF59E0B),
+                                        Color(0xFFFFD700),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(Icons.wb_sunny_rounded,
+                                      color: Colors.white, size: 16),
+                                ),
+                                const Spacer(),
+                                Icon(Icons.chevron_right_rounded,
+                                    size: 18,
+                                    color: isDark
+                                        ? Colors.white30
+                                        : AppColors.textMuted),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Morning',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textDark,
+                              ),
+                            ),
+                            morningRoutine.when(
+                              data: (r) {
+                                if (r == null) {
+                                  return Text(
+                                    'Start routine',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w300,
+                                      color: isDark
+                                          ? Colors.white54
+                                          : AppColors.textMuted,
+                                    ),
+                                  );
+                                }
+                                return Text(
+                                  '${r.completedCount}/${r.tasks.length} tasks done',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w300,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : AppColors.textMuted,
+                                  ),
+                                );
+                              },
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, __) => const SizedBox.shrink(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => context.push('/routine/evening'),
+                      child: GlassCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        AppColors.lavender,
+                                        AppColors.deepPurple,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                      Icons.nights_stay_rounded,
+                                      color: Colors.white,
+                                      size: 16),
+                                ),
+                                const Spacer(),
+                                Icon(Icons.chevron_right_rounded,
+                                    size: 18,
+                                    color: isDark
+                                        ? Colors.white30
+                                        : AppColors.textMuted),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Evening',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textDark,
+                              ),
+                            ),
+                            eveningRoutine.when(
+                              data: (r) {
+                                if (r == null) {
+                                  return Text(
+                                    'Ready to wind down?',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w300,
+                                      color: isDark
+                                          ? Colors.white54
+                                          : AppColors.textMuted,
+                                    ),
+                                  );
+                                }
+                                return Text(
+                                  r.completedCount > 0
+                                      ? '${r.completedCount}/${r.tasks.length} tasks done'
+                                      : 'Ready to wind down?',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w300,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : AppColors.textMuted,
+                                  ),
+                                );
+                              },
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, __) => const SizedBox.shrink(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+                  .animate()
+                  .fadeIn(duration: 500.ms, delay: 300.ms)
                   .slideY(begin: 0.1, end: 0),
 
               const SizedBox(height: 20),
@@ -166,7 +339,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '"What, like it\'s hard?" — You\'re capable of everything you set your mind to today.',
+                      '"What, like it\'s hard?" \u{2014} You\'re capable of everything you set your mind to today.',
                       style: GoogleFonts.poppins(
                         fontSize: 15,
                         fontWeight: FontWeight.w300,
@@ -179,7 +352,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               )
                   .animate()
-                  .fadeIn(duration: 500.ms, delay: 300.ms)
+                  .fadeIn(duration: 500.ms, delay: 350.ms)
                   .slideY(begin: 0.1, end: 0),
 
               const SizedBox(height: 20),
@@ -226,17 +399,19 @@ class HomeScreen extends ConsumerWidget {
                         colors: [AppColors.lavender, Color(0xFFB494D6)],
                       ),
                       isDark: isDark,
+                      onTap: () => context.push('/fitness/log-workout'),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _QuickActionCard(
-                      icon: Icons.restaurant_rounded,
-                      label: 'Meals',
+                      icon: Icons.self_improvement_rounded,
+                      label: 'Routines',
                       gradient: const LinearGradient(
                         colors: [AppColors.deepPurple, Color(0xFF9F67FF)],
                       ),
                       isDark: isDark,
+                      onTap: () => context.push('/routine/morning'),
                     ),
                   ),
                 ],
@@ -250,6 +425,129 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+// Mini step ring for home screen
+class _MiniStepRing extends StatefulWidget {
+  final StepData steps;
+  final bool isDark;
+
+  const _MiniStepRing({required this.steps, required this.isDark});
+
+  @override
+  State<_MiniStepRing> createState() => _MiniStepRingState();
+}
+
+class _MiniStepRingState extends State<_MiniStepRing>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _animation = Tween<double>(begin: 0, end: widget.steps.progress)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return SizedBox(
+          width: 120,
+          height: 120,
+          child: CustomPaint(
+            painter: _MiniRingPainter(
+              progress: _animation.value,
+              isDark: widget.isDark,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${widget.steps.stepCount}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: widget.isDark
+                          ? Colors.white
+                          : AppColors.textDark,
+                    ),
+                  ),
+                  Text(
+                    'steps',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w300,
+                      color: widget.isDark
+                          ? Colors.white54
+                          : AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MiniRingPainter extends CustomPainter {
+  final double progress;
+  final bool isDark;
+
+  _MiniRingPainter({required this.progress, required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 8;
+    const strokeWidth = 8.0;
+
+    final bgPaint = Paint()
+      ..color = isDark
+          ? Colors.white.withValues(alpha: 0.1)
+          : AppColors.rosePink.withValues(alpha: 0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(center, radius, bgPaint);
+
+    if (progress > 0) {
+      final rect = Rect.fromCircle(center: center, radius: radius);
+      final gradientPaint = Paint()
+        ..shader = const SweepGradient(
+          startAngle: -pi / 2,
+          endAngle: 3 * pi / 2,
+          colors: [AppColors.rosePink, AppColors.deepPurple],
+        ).createShader(rect)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(
+          rect, -pi / 2, 2 * pi * progress, false, gradientPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MiniRingPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 class _TodaySchedule extends StatelessWidget {
@@ -306,7 +604,7 @@ class _TodaySchedule extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    'Your day is wide open! ✨',
+                    'Your day is wide open! \u{2728}',
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
@@ -352,7 +650,8 @@ class _TodaySchedule extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                DateFormat('h:mm a').format(event.dateTime),
+                                DateFormat('h:mm a')
+                                    .format(event.dateTime),
                                 style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w300,

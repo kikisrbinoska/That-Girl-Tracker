@@ -4,12 +4,20 @@ import '../features/auth/auth_screen.dart';
 import '../features/calendar/add_event_screen.dart';
 import '../features/calendar/calendar_screen.dart';
 import '../features/calendar/event_detail_screen.dart';
+import '../features/fitness/fitness_screen.dart';
+import '../features/fitness/log_workout_screen.dart';
+import '../features/fitness/training_plan_screen.dart';
+import '../features/fitness/sleep_tracker_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/nutrition/nutrition_screen.dart';
+import '../features/nutrition/meal_logger_screen.dart';
 import '../features/outfit/add_clothing_screen.dart';
 import '../features/outfit/morning_outfit_screen.dart';
 import '../features/outfit/saved_outfits_screen.dart';
 import '../features/outfit/wardrobe_screen.dart';
 import '../features/outfit/wishlist_screen.dart';
+import '../features/routine/morning_routine_screen.dart';
+import '../features/routine/evening_routine_screen.dart';
 import '../models/clothing_item.dart';
 import '../models/event.dart';
 import '../shared/widgets/app_shell.dart';
@@ -77,6 +85,39 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const MorningOutfitScreen(),
       ),
+      // Fitness full-screen routes
+      GoRoute(
+        path: '/fitness/log-workout',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const LogWorkoutScreen(),
+      ),
+      GoRoute(
+        path: '/fitness/training-plan',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const TrainingPlanScreen(),
+      ),
+      GoRoute(
+        path: '/fitness/sleep',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SleepTrackerScreen(),
+      ),
+      // Nutrition full-screen routes
+      GoRoute(
+        path: '/nutrition/meals',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const MealLoggerScreen(),
+      ),
+      // Routine full-screen routes
+      GoRoute(
+        path: '/routine/morning',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const MorningRoutineScreen(),
+      ),
+      GoRoute(
+        path: '/routine/evening',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const EveningRoutineScreen(),
+      ),
       // Shell routes (with bottom nav)
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
@@ -102,29 +143,18 @@ class AppRouter {
           ),
           GoRoute(
             path: '/fitness',
-            pageBuilder: (context, state) => NoTransitionPage(
-              child: _placeholder('Fitness'),
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: FitnessScreen(),
             ),
           ),
           GoRoute(
-            path: '/profile',
-            pageBuilder: (context, state) => NoTransitionPage(
-              child: _placeholder('Profile'),
+            path: '/nutrition',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: NutritionScreen(),
             ),
           ),
         ],
       ),
     ],
   );
-
-  static Widget _placeholder(String title) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          title,
-          style: const TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
 }

@@ -14,7 +14,7 @@ class AppShell extends StatelessWidget {
     if (location.startsWith('/calendar')) return 1;
     if (location.startsWith('/wardrobe')) return 2;
     if (location.startsWith('/fitness')) return 3;
-    if (location.startsWith('/profile')) return 4;
+    if (location.startsWith('/nutrition')) return 4;
     return 0;
   }
 
@@ -29,7 +29,7 @@ class AppShell extends StatelessWidget {
       case 3:
         context.go('/fitness');
       case 4:
-        context.go('/profile');
+        context.go('/nutrition');
     }
   }
 
@@ -60,7 +60,8 @@ class AppShell extends StatelessWidget {
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -89,8 +90,8 @@ class AppShell extends StatelessWidget {
                       onTap: () => _onTap(context, 3),
                     ),
                     _NavItem(
-                      icon: Icons.person_rounded,
-                      label: 'Profile',
+                      icon: Icons.restaurant_rounded,
+                      label: 'Nutrition',
                       isSelected: selectedIndex == 4,
                       onTap: () => _onTap(context, 4),
                     ),
@@ -125,7 +126,7 @@ class _NavItem extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           gradient: isSelected ? AppColors.softGradient : null,
@@ -144,14 +145,14 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 24,
+              size: 22,
               color: isSelected ? Colors.white : AppColors.textMuted,
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isSelected ? Colors.white : AppColors.textMuted,
               ),
