@@ -312,23 +312,23 @@ class _LogWorkoutScreenState extends ConsumerState<LogWorkoutScreen> {
                         const Duration(days: 30)),
                     lastDate: DateTime.now(),
                   );
-                  if (date != null) {
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime:
-                          TimeOfDay.fromDateTime(_selectedDate),
-                    );
-                    if (time != null) {
-                      setState(() {
-                        _selectedDate = DateTime(
-                          date.year,
-                          date.month,
-                          date.day,
-                          time.hour,
-                          time.minute,
-                        );
-                      });
-                    }
+                  if (date == null) return;
+                  if (!context.mounted) return;
+                  final time = await showTimePicker(
+                    context: context,
+                    initialTime:
+                        TimeOfDay.fromDateTime(_selectedDate),
+                  );
+                  if (time != null && mounted) {
+                    setState(() {
+                      _selectedDate = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        time.hour,
+                        time.minute,
+                      );
+                    });
                   }
                 },
                 child: GlassCard(

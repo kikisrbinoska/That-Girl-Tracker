@@ -81,4 +81,16 @@ class EventRepository {
     if (_userId == null) return;
     await _eventsCollection().doc(eventId).delete();
   }
+
+  Future<List<Event>> getEventsForDate(DateTime date) async {
+    if (_userId == null) return [];
+    final start = DateTime(date.year, date.month, date.day);
+    final end = start.add(const Duration(days: 1));
+    final snap = await _eventsCollection()
+        .where('dateTime', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('dateTime', isLessThan: Timestamp.fromDate(end))
+        .orderBy('dateTime')
+        .get();
+    return snap.docs.map((d) => Event.fromMap(d.data())).toList();
+  }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,6 +16,19 @@ import '../../shared/widgets/glass_card.dart';
 
 class MorningOutfitScreen extends ConsumerWidget {
   const MorningOutfitScreen({super.key});
+
+  static const _affirmations = [
+    '"What, like it\'s hard?" — You\'ve got this.',
+    '"Dress like you\'re going somewhere better later."',
+    '"Confidence is the best outfit. Rock it!"',
+    '"Look good, feel good, do good."',
+    '"Your style is your statement."',
+  ];
+
+  String _dailyAffirmation() {
+    final dayOfYear = DateTime.now().difference(DateTime(DateTime.now().year)).inDays;
+    return _affirmations[dayOfYear % _affirmations.length];
+  }
 
   bool _hasGymToday(List<Event> events) {
     return events.any((e) => e.type == EventType.gym);
@@ -128,54 +142,91 @@ class MorningOutfitScreen extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // Today's events summary
-              if (todayEvents.isNotEmpty)
-                GlassCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+              // Today's Schedule Overview
+              GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Today's Schedule Overview",
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (todayEvents.isEmpty)
                       Text(
-                        "Today's Events",
+                        'No events today — your day is wide open! ✨',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : AppColors.textDark,
+                          fontWeight: FontWeight.w300,
+                          color: isDark ? Colors.white54 : AppColors.textMuted,
                         ),
-                      ),
-                      const SizedBox(height: 8),
+                      )
+                    else
                       ...todayEvents.take(3).map((e) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
+                            padding: const EdgeInsets.only(bottom: 10),
                             child: Row(
                               children: [
                                 Container(
-                                  width: 8,
-                                  height: 8,
+                                  width: 4,
+                                  height: 36,
                                   decoration: BoxDecoration(
                                     color: Color(Event.typeColors[e.type]!),
-                                    shape: BoxShape.circle,
+                                    borderRadius: BorderRadius.circular(2),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '${Event.typeLabel(e.type)}: ${e.title}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w400,
-                                    color: isDark
-                                        ? Colors.white70
-                                        : AppColors.textDark,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        e.title,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark ? Colors.white : AppColors.textDark,
+                                        ),
+                                      ),
+                                      Text(
+                                        DateFormat('h:mm a').format(e.dateTime),
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w300,
+                                          color: isDark ? Colors.white54 : AppColors.textMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Color(Event.typeColors[e.type]!).withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    Event.typeLabel(e.type),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(Event.typeColors[e.type]!),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           )),
-                    ],
-                  ),
-                )
-                    .animate()
-                    .fadeIn(duration: 500.ms, delay: 200.ms)
-                    .slideY(begin: 0.1, end: 0),
+                  ],
+                ),
+              )
+                  .animate()
+                  .fadeIn(duration: 500.ms, delay: 200.ms)
+                  .slideY(begin: 0.1, end: 0),
 
               const SizedBox(height: 16),
 
@@ -390,6 +441,39 @@ class MorningOutfitScreen extends ConsumerWidget {
               )
                   .animate()
                   .fadeIn(duration: 500.ms, delay: 400.ms),
+
+              const SizedBox(height: 24),
+
+              // Motivational quote
+              GlassCard(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    ShaderMask(
+                      shaderCallback: (bounds) =>
+                          AppColors.primaryGradient.createShader(bounds),
+                      child: const Icon(Icons.auto_awesome_rounded,
+                          color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        _dailyAffirmation(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          fontStyle: FontStyle.italic,
+                          color: isDark ? Colors.white70 : AppColors.textDark,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  .animate()
+                  .fadeIn(duration: 500.ms, delay: 450.ms)
+                  .slideY(begin: 0.1, end: 0),
             ],
           ),
         ),

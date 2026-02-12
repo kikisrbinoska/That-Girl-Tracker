@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../shared/constants/app_colors.dart';
 import '../../shared/widgets/glass_card.dart';
 import 'water_tracker_widget.dart';
+import 'water_trend_chart.dart';
 
 class NutritionScreen extends ConsumerWidget {
   const NutritionScreen({super.key});
@@ -46,6 +47,14 @@ class NutritionScreen extends ConsumerWidget {
               const WaterTrackerWidget(compact: false)
                   .animate()
                   .fadeIn(duration: 500.ms, delay: 100.ms)
+                  .slideY(begin: 0.1, end: 0),
+
+              const SizedBox(height: 20),
+
+              // Water 7-Day Trend
+              const WaterTrendChart()
+                  .animate()
+                  .fadeIn(duration: 500.ms, delay: 150.ms)
                   .slideY(begin: 0.1, end: 0),
 
               const SizedBox(height: 24),

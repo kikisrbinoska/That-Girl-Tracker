@@ -122,6 +122,29 @@ class NutritionRepository {
         .map((snap) => snap.docs.map((d) => Meal.fromMap(d.data())).toList());
   }
 
+  Future<List<WaterLog>> getWeeklyWaterLogs() async {
+    final uid = _userId;
+    if (uid == null) return [];
+    final now = DateTime.now();
+    final logs = <WaterLog>[];
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final key = _dateKey(date);
+      final doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('waterLogs')
+          .doc(key)
+          .get();
+      if (doc.exists) {
+        logs.add(WaterLog.fromMap(doc.data()!));
+      } else {
+        logs.add(WaterLog(date: date, userId: uid));
+      }
+    }
+    return logs;
+  }
+
   Future<void> deleteMeal(String mealId) async {
     final uid = _userId;
     if (uid == null) return;

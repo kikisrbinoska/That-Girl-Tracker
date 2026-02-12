@@ -15,6 +15,7 @@ class AppShell extends StatelessWidget {
     if (location.startsWith('/wardrobe')) return 2;
     if (location.startsWith('/fitness')) return 3;
     if (location.startsWith('/nutrition')) return 4;
+    if (location.startsWith('/profile')) return 5;
     return 0;
   }
 
@@ -30,6 +31,8 @@ class AppShell extends StatelessWidget {
         context.go('/fitness');
       case 4:
         context.go('/nutrition');
+      case 5:
+        context.go('/profile');
     }
   }
 
@@ -94,6 +97,12 @@ class AppShell extends StatelessWidget {
                       label: 'Nutrition',
                       isSelected: selectedIndex == 4,
                       onTap: () => _onTap(context, 4),
+                    ),
+                    _NavItem(
+                      icon: Icons.person_rounded,
+                      label: 'Profile',
+                      isSelected: selectedIndex == 5,
+                      onTap: () => _onTap(context, 5),
                     ),
                   ],
                 ),

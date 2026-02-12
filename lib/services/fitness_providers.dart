@@ -67,6 +67,11 @@ final todayWaterLogProvider = StreamProvider<WaterLog?>((ref) {
   return repo.watchTodayWaterLog();
 });
 
+final weeklyWaterProvider = FutureProvider<List<WaterLog>>((ref) async {
+  final repo = ref.watch(nutritionRepositoryProvider);
+  return repo.getWeeklyWaterLogs();
+});
+
 // ── Meal Providers ──
 
 final todayMealsProvider = StreamProvider<List<Meal>>((ref) {
